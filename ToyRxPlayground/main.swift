@@ -7,176 +7,133 @@
 
 import Foundation
 import RxSwift
+import RxRelay
 
 enum MyError: Error {
     case anError
 }
 
-example(of: "just, of, from") {
-    // 1
-    let one = 1
-    let two = 2
-    let three = 3
-  
-    // 2
-    let observable = Observable<Int>.just(one)
+example(of: "PublishSubject") {
+    let subject = PublishSubject<String>()
     
-    let observable2 = Observable.of(one, two, three)
+    subject.on(.next("is anyone listening?"))
     
-    let observable3 = Observable.of([one, two, three])
-    
-    let observable4 = Observable.from([one, two, three])
-}
-
-example(of: "subscribe") {
-    let one = 1
-    let two = 2
-    let three = 3
-    
-    let observable = Observable.of(one, two, three)
-    
-    observable.subscribe(onNext: { element in
-      print(element)
+    let subscriptionOne = subject.subscribe(onNext: { string in
+        print(string)
     })
-}
-
-example(of: "empty") {
-    let observable = Observable<Void>.empty()
     
-    observable.subscribe(onNext: { element in
-        print(element)
-    }, onCompleted: {
-        print("completed!")
-    })
-}
-
-example(of: "never") {
-    let observable = Observable<Void>.never()
+    subject.on(.next("1"))
+    subject.on(.next("2"))
     
-    observable.subscribe(onNext: { element in
-        print(element)
-    }, onCompleted: {
-        print("completed!")
-    })
-}
-
-example(of: "range") {
-    let observable = Observable<Int>.range(start: 1, count: 10)
+    let subscriptionTwo = subject
+        .subscribe { event in
+            print("2), ", event.element ?? event)
+        }
     
-    observable.subscribe(onNext: { i in
-        let n = Double(i)
-        
-        let fibonacci = Int(
-                ((pow(1.61803, n) - pow(0.61803, n)) /
-                  2.23606).rounded()
-              )
-        
-        print(fibonacci)
-    })
-}
-
-example(of: "dispose") {
-    let observable = Observable.of("a", "b", "c")
+    subject.on(.next("3"))
     
-    let subscription = observable.subscribe { event in
-        print(event)
-    }
-    subscription.dispose()
-}
-
-// need to dispose subscriptions to avoid memory leak
-example(of: "DisposeBag") {
+    subscriptionOne.dispose()
+    
+    subject.on(.next("4"))
+    
+    subject.onCompleted()
+    
+    subject.on(.next("5"))
+    
+    subscriptionTwo.dispose()
+    
     let disposeBag = DisposeBag()
     
-    Observable.of("a", "b", "c").subscribe {
+    subject.subscribe {
+        print("3) ", $0.element ?? $0)
+    }
+    .disposed(by: disposeBag)
+    
+    subject.on(.next("?"))
+}
+
+example(of: "BehaviorSubject") {
+    let subject = BehaviorSubject(value: "initial value")
+    let disposeBag = DisposeBag()
+    
+    subject.subscribe {
+        print(label: "1)", event: $0)
+    }
+    .disposed(by: disposeBag)
+    
+    subject.onNext("X")
+    
+    subject.onError(MyError.anError)
+    
+    subject.subscribe {
+        print(label: "2) ", event: $0)
+    }
+    .disposed(by: disposeBag)
+}
+
+example(of: "ReplaySubject") {
+    let subject = ReplaySubject<String>.create(bufferSize: 2)
+    let disposeBag = DisposeBag()
+    
+    subject.onNext("1")
+    subject.onNext("2")
+    subject.onNext("3")
+    
+    subject.subscribe {
+        print(label: "1) ", event: $0)
+    }
+    .disposed(by: disposeBag)
+    
+    subject.subscribe {
+        print(label: "2) ", event: $0)
+    }
+    .disposed(by: disposeBag)
+    
+    subject.onNext("4")
+    
+    subject.onError(MyError.anError)
+    subject.dispose()
+    
+    subject.subscribe {
+        print(label: "3) ", event: $0)
+    }
+    .disposed(by: disposeBag)
+}
+
+example(of: "PublishRelay") {
+    let relay = PublishRelay<String>()
+    
+    let disposeBag = DisposeBag()
+    
+    relay.accept("knock, knock, anyone hoome?")
+    
+    relay.subscribe(onNext: {
         print($0)
-    }.disposed(by: disposeBag)
-}
-
-example(of: "create") {
-    let disposeBag = DisposeBag()
-
-    Observable<String>.create { observer in
-        observer.onNext("1")
-        observer.onError(MyError.anError)
-        observer.onCompleted()
-        observer.onNext("?")
-        
-        return Disposables.create()
-    }.subscribe(
-        onNext: { print($0) },
-        onError: { print($0) },
-        onCompleted: { print("completed") },
-        onDisposed: { print("disposed") }
-    )
+    })
     .disposed(by: disposeBag)
+    
+    relay.accept("1")
 }
 
-example(of: "deferred") {
+example(of: "BehaviorRelay") {
+    let relay = BehaviorRelay(value: "initial value")
     let disposeBag = DisposeBag()
     
-    var flip = false
+    relay.accept("new initial value")
     
-    let factory: Observable<Int> = Observable.deferred {
-        flip.toggle()
-        
-        if flip {
-            return Observable.of(1, 2, 3)
-        } else {
-            return Observable.of(4, 5, 6)
-        }
-    }
-    
-    for _ in 0...3 {
-        factory.subscribe(onNext: {
-            print($0, terminator: "")
-        })
-        .disposed(by: disposeBag)
-        
-        print()
-    }
-}
-
-example(of: "Single") {
-    let disposeBag = DisposeBag()
-    
-    enum FileReadError: Error {
-        case fileNotFound, unreadable, encodingFailed
-    }
-    
-    func loadText(from name: String) -> Single<String> {
-        return Single.create { single in
-            let disposable = Disposables.create()
-            
-            guard let path = Bundle.main.path(forResource: name, ofType: "txt") else {
-                single(.error(FileReadError.fileNotFound))
-                return disposable
-            }
-            
-            guard let data = FileManager.default.contents(atPath: path) else {
-                single(.error(FileReadError.unreadable))
-                return disposable
-            }
-            
-            guard let contents = String(data: data, encoding: .utf8) else {
-                single(.error(FileReadError.encodingFailed))
-                return disposable
-            }
-            
-            single(.success(contents))
-            return disposable
-        }
-    }
-    
-    loadText(from: "helloWorld")
-        .debug("single")
-        .subscribe {
-        switch $0 {
-        case .success(let string):
-            print(string)
-        case .error(let error):
-            print(error)
-        }
+    relay.subscribe {
+        print(label: "1) ", event: $0)
     }
     .disposed(by: disposeBag)
+    
+    relay.accept("1")
+    
+    relay.subscribe {
+        print(label: "2) ", event: $0)
+    }
+    .disposed(by: disposeBag)
+    
+    relay.accept("2")
+    
+    print(relay.value)
 }
