@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8AC40F2C583CD5F4560735C4 /* libPods-ToyRxPlayground.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE0CF81347D5AAD7CEDCDA7F /* libPods-ToyRxPlayground.a */; };
 		9C03496C2538AE5E00E53F67 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C03496B2538AE5E00E53F67 /* main.swift */; };
+		9C0349792538AF4300E53F67 /* print.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C0349782538AF4300E53F67 /* print.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,8 +25,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4FB8F8FBDA3CCED014558A76 /* Pods-ToyRxPlayground.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToyRxPlayground.debug.xcconfig"; path = "Target Support Files/Pods-ToyRxPlayground/Pods-ToyRxPlayground.debug.xcconfig"; sourceTree = "<group>"; };
 		9C0349682538AE5E00E53F67 /* ToyRxPlayground */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ToyRxPlayground; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C03496B2538AE5E00E53F67 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		9C0349782538AF4300E53F67 /* print.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = print.swift; sourceTree = "<group>"; };
+		CE0CF81347D5AAD7CEDCDA7F /* libPods-ToyRxPlayground.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ToyRxPlayground.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CF11E0D94D3183BE28F2516F /* Pods-ToyRxPlayground.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToyRxPlayground.release.xcconfig"; path = "Target Support Files/Pods-ToyRxPlayground/Pods-ToyRxPlayground.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,17 +38,37 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8AC40F2C583CD5F4560735C4 /* libPods-ToyRxPlayground.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		31853FFEBBF90B92ED38C5EE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CE0CF81347D5AAD7CEDCDA7F /* libPods-ToyRxPlayground.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		92602662140BF65EEBE00E93 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				4FB8F8FBDA3CCED014558A76 /* Pods-ToyRxPlayground.debug.xcconfig */,
+				CF11E0D94D3183BE28F2516F /* Pods-ToyRxPlayground.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		9C03495F2538AE5D00E53F67 = {
 			isa = PBXGroup;
 			children = (
 				9C03496A2538AE5E00E53F67 /* ToyRxPlayground */,
 				9C0349692538AE5E00E53F67 /* Products */,
+				92602662140BF65EEBE00E93 /* Pods */,
+				31853FFEBBF90B92ED38C5EE /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -58,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				9C03496B2538AE5E00E53F67 /* main.swift */,
+				9C0349782538AF4300E53F67 /* print.swift */,
 			);
 			path = ToyRxPlayground;
 			sourceTree = "<group>";
@@ -69,6 +96,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9C03496F2538AE5E00E53F67 /* Build configuration list for PBXNativeTarget "ToyRxPlayground" */;
 			buildPhases = (
+				D93C26071C93AFCE64CECA1A /* [CP] Check Pods Manifest.lock */,
 				9C0349642538AE5E00E53F67 /* Sources */,
 				9C0349652538AE5E00E53F67 /* Frameworks */,
 				9C0349662538AE5E00E53F67 /* CopyFiles */,
@@ -114,12 +142,38 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		D93C26071C93AFCE64CECA1A /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ToyRxPlayground-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		9C0349642538AE5E00E53F67 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				9C03496C2538AE5E00E53F67 /* main.swift in Sources */,
+				9C0349792538AF4300E53F67 /* print.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,6 +297,7 @@
 		};
 		9C0349702538AE5E00E53F67 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4FB8F8FBDA3CCED014558A76 /* Pods-ToyRxPlayground.debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -252,6 +307,7 @@
 		};
 		9C0349712538AE5E00E53F67 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CF11E0D94D3183BE28F2516F /* Pods-ToyRxPlayground.release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
