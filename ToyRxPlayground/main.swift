@@ -8,145 +8,234 @@
 import Foundation
 import RxSwift
 import RxRelay
+import RxCocoa
 
 enum MyError: Error {
     case anError
 }
 
-example(of: "toArray") {
-    let bag = DisposeBag()
+example(of: "startWith") {
+    let numbers = Observable.of(2, 3, 4)
     
-    Observable.of("a", "b", "c")
-        .toArray()
-        .subscribe(onSuccess: {
-            print($0)
-        })
-        .disposed(by: bag)
+    let observable = numbers.startWith(1)
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
 }
 
-example(of: "map") {
-    let bag = DisposeBag()
+example(of: "Observable.concat") {
+    let first = Observable.of(1, 2, 3)
+    let second = Observable.of(4, 5, 6)
     
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .spellOut
+    let observable = Observable.concat([first, second])
     
-    Observable<Int>.of(123, 4, 56)
-        .map {
-            formatter.string(for: $0) ?? ""
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
+}
+
+example(of: "concat") {
+    let germanCities = Observable.of("Berlin", "Munich", "Frankfurt")
+    let spanishCities = Observable.of("Madrid", "Barcelona", "Valencia")
+    
+    let observable = germanCities.concat(spanishCities)
+    
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
+}
+
+example(of: "concatMap") {
+    let sequences = [
+        "German cities": Observable.of("Berlin", "Munich", "Frankfurt"),
+        "Spanish cities": Observable.of("Madrid", "Barcelona", "Valencia")
+    ]
+    
+    let observable = Observable.of("German cities", "Spanish cities")
+        .concatMap({ country in sequences[country] ?? .empty() })
+    
+    _ = observable.subscribe(onNext: { string in
+        print(string)
+    })
+}
+
+example(of: "merge") {
+    let left = PublishSubject<String>()
+    let right = PublishSubject<String>()
+    
+    let source = Observable.of(left.asObservable(), right.asObservable())
+    
+    let observable = source.merge()
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
+    
+    var leftValues = ["Berlin", "Munich", "Frankfurt"]
+    var rightValues = ["Madrid", "Barcelona", "Valencia"]
+    
+    repeat {
+        switch Bool.random() {
+        case true where !leftValues.isEmpty:
+        left.onNext("Left: " + leftValues.removeFirst())
+        case false where !rightValues.isEmpty:
+            right.onNext("Right: " + rightValues.removeFirst())
+        default:
+            break
         }
-        .subscribe(onNext: {
-            print($0)
-        })
-        .disposed(by: bag)
+    } while !leftValues.isEmpty || !rightValues.isEmpty
+
+    left.onCompleted()
+    right.onCompleted()
 }
 
-example(of: "enumerated and map") {
-    let bag = DisposeBag()
+example(of: "combineLatest") {
+    let left = PublishSubject<String>()
+    let right = PublishSubject<String>()
     
-    Observable.of(1, 2, 3, 4, 5, 6)
-        .enumerated()
-        .map { index, integer in
-            index > 2 ? integer * 2 : integer
-        }
-        .subscribe(onNext: {
-            print($0)
-        })
-        .disposed(by: bag)
+    let observable = Observable.combineLatest(left, right) {
+        lastLeft, lastRight in
+        "\(lastLeft) \(lastRight)"
+    }
+    
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
+    
+    print("> Sending a value to Left")
+    left.onNext("Hello, ")
+    print("> Sending a value to Right")
+    right.onNext("world")
+    print("> Sending another value to Right")
+    right.onNext("RxSwift")
+    print("> Sending another value to Left")
+    left.onNext("Have a good day,")
+    
+    left.onCompleted()
+    right.onCompleted()
 }
 
-example(of: "compactMap") {
-    let bag = DisposeBag()
+example(of: "combine user choice and value") {
+    let choice: Observable<DateFormatter.Style> = Observable.of(.short, .long)
+    let dates = Observable.of(Date())
     
-    Observable.of("to", "be", nil, "or", "not", "to", "be", nil)
-        .compactMap { $0 }
-        .toArray()
-        .map({ $0.joined(separator: " " )})
-        .subscribe(onSuccess: {
-            print($0)
-        })
-        .disposed(by: bag)
+    let observable = Observable.combineLatest(choice, dates) {
+        format, when -> String in
+        let formatter = DateFormatter()
+        formatter.dateStyle  = format
+        return formatter.string(from: when)
+    }
+    
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
 }
 
-struct Student {
-    let score: BehaviorSubject<Int>
+example(of: "zip") {
+    enum Weather {
+        case cloudy
+        case sunny
+    }
+    
+    let left: Observable<Weather> = Observable.of(.sunny, .cloudy, .cloudy, .sunny)
+    let right = Observable.of("Lisbon", "Copenhagen", "London", "Madrid", "Vienna")
+    
+    let observable = Observable.zip(left, right) { weather, city in
+        return "It's \(weather) in \(city)"
+    }
+    
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
 }
 
-example(of: "flatMap") {
-    let bag = DisposeBag()
+example(of: "withLatestFrom") {
+    let button = PublishSubject<Void>()
+    let textField = PublishSubject<String>()
     
-    let laura = Student(score: BehaviorSubject(value: 80))
-    let charlotte = Student(score: BehaviorSubject(value: 90))
+    let observable = button.withLatestFrom(textField)
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
     
-    let student = PublishSubject<Student>()
-    
-    student
-        .flatMap { $0.score }
-        .subscribe(onNext: {
-            print($0)
-        })
-        .disposed(by: bag)
-    
-    student.onNext(laura)
-    laura.score.onNext(85)
-    
-    student.onNext(charlotte)
-    charlotte.score.onNext(100)
+    textField.onNext("Par")
+    textField.onNext("Pari")
+    textField.onNext("Paris")
+    button.onNext(())
+    button.onNext(())
 }
 
-example(of: "flatMapLatest") {
-    let bag = DisposeBag()
+example(of: "amb") {
+    let left = PublishSubject<String>()
+    let right = PublishSubject<String>()
     
-    let laura = Student(score: BehaviorSubject(value: 80))
-    let charlotte = Student(score: BehaviorSubject(value: 90))
+    let observable = left.amb(right)
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
     
-    let student = PublishSubject<Student>()
-    
-    student
-        .flatMapLatest { $0.score }
-        .subscribe(onNext: {
-            print($0)
-        })
-        .disposed(by: bag)
-    
-    student.onNext(laura)
-    laura.score.onNext(85)
-    student.onNext(charlotte)
-    
-    laura.score.onNext(95)
-    charlotte.score.onNext(100)
+    // will only relay elements from the first active observable
+    right.onNext("Kuala Lumpur")
+    left.onNext("Lisbon")
+    right.onNext("Copenhagen")
+    left.onNext("London")
+    left.onNext("Madrid")
+    right.onNext("Vienna")
+
+    left.onCompleted()
+    right.onCompleted()
 }
 
-example(of: "materialize and dematerialize") {
-    let bag = DisposeBag()
+example(of: "switchLatest") {
+    let one = PublishSubject<String>()
+    let two = PublishSubject<String>()
+    let three = PublishSubject<String>()
     
-    let laura = Student(score: BehaviorSubject(value: 80))
-    let charlotte = Student(score: BehaviorSubject(value: 100))
+    let source = PublishSubject<Observable<String>>()
     
-    let student = BehaviorSubject(value: laura)
+    let observable = source.switchLatest()
+    let disposable = observable.subscribe(onNext: { value in
+        print(value)
+    })
     
-    let studentScore = student
-        .flatMapLatest {
-            $0.score.materialize()
-        }
+    source.onNext(one)
+    one.onNext("some text from sequence one")
+    two.onNext("some text from sequence two")
     
-    studentScore
-        .filter {
-            guard $0.error == nil else {
-                print($0.error!)
-                return false
-            }
-            
-            return true
-        }
-        .dematerialize()
-        .subscribe(onNext: {
-            print($0)
-        })
-        .disposed(by: bag)
+    source.onNext(two)
+    two.onNext("more text from sequence two")
+    one.onNext("and also from sequence one")
     
-    laura.score.onNext(85)
-    laura.score.onError(MyError.anError)
-    laura.score.onNext(90)
+    source.onNext(three)
+    two.onNext("why don't you see me?")
+    one.onNext("i'm alone, help me")
+    three.onNext("hey it's three. I win.")
+
+    source.onNext(one)
+    one.onNext("nope. It's me, one!")
     
-    student.onNext(charlotte)
+    disposable.dispose()
+}
+
+example(of: "reduce") {
+    let source = Observable.of(1, 2, 3, 4, 5, 6)
+    
+    let observable = source.reduce(0) { summary, newValue in
+        return summary + newValue
+    }
+    
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
+}
+
+example(of: "scan") {
+    let source = Observable.of(1, 2, 3, 4, 5, 6)
+
+    let observable = source.scan(0) { summary, newValue in
+        return summary + newValue
+    }
+    
+    _ = observable.subscribe(onNext: { value in
+        print(value)
+    })
 }
